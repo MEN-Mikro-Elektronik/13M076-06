@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<package xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="packagedesc.xsd">
+	<name>13m07606</name>
+	<description>MDIS5 driver package for MEN M76 M-Module</description>
+	<date>2010-03-11</date>
+	<revision>2.1</revision>
+	<docroot>DRIVERS/MDIS_LL/M076/DOC/m76_drv.html</docroot>
+	<modellist>
+		<model>
+			<hwname>M76</hwname>
+			<description>System Multimeter</description>
+			<devtype>MDIS</devtype>
+			<autoid>
+				<mmoduleid>0x5346004c</mmoduleid>
+			</autoid>
+			<busif>M-Module</busif>
+			<swmodulelist>
+				<swmodule>
+					<name>m76</name>
+					<description>Driver for M76</description>
+					<type>Low Level Driver</type>
+					<makefilepath>M076/DRIVER/COM/driver.mak</makefilepath>
+				</swmodule>
+			</swmodulelist>
+		</model>
+	</modellist>
+	<settinglist>
+		<setting>
+			<name>ID_CHECK</name>
+			<description>Define wether M-Module ID-PROM is checked</description>
+			<type>U_INT32</type>
+			<defaultvalue>1</defaultvalue>
+			<choises>
+				<choise>
+					<value>1</value>
+					<description>enable</description>
+				</choise>
+				<choise>
+					<value>0</value>
+					<description>disable -- ignore IDPROM</description>
+				</choise>
+			</choises>
+		</setting>
+	</settinglist>
+	<swmodulelist>
+		<swmodule>
+			<name>m76_simp</name>
+			<description>Simple example program for the M76 driver</description>
+			<type>Driver Specific Tool</type>
+			<makefilepath>M076/EXAMPLE/M76_SIMP/COM/program.mak</makefilepath>
+		</swmodule>
+		<swmodule>
+			<name>m76_meas</name>
+			<description>Configure M76 and perform measurement</description>
+			<type>Driver Specific Tool</type>
+			<makefilepath>M076/TOOLS/M76_MEAS/COM/program.mak</makefilepath>
+		</swmodule>
+		<swmodule internal="true">
+			<name>m76_cali</name>
+			<description>M76 tool for factory calibration and test</description>
+			<type>Driver Specific Tool</type>
+			<makefilepath>M076/TEST/M76_CALI/COM/program.mak</makefilepath>
+		</swmodule>
+	</swmodulelist>
+</package>

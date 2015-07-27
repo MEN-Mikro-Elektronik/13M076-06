@@ -1,0 +1,72 @@
+Program Description
+===================
+Wed Sep 04 11:56:04  2002
+ 
+Overview of all Programs
+------------------------
+For reasons of safety please read the M76 user manual 
+before making measurements using the M-Module!
+
+m76_simp         - M76 example for reading a value
+m76_meas         - Configure M76 and perform measurement
+
+
+Program m76_simp
+----------------
+
+Usage:
+   m76_simp <device>
+
+Function:
+   M76 example for reading a value
+
+Options:
+   device       device name   
+   
+Description:
+   Simple example program for the M76 driver   
+   
+   Reads a value in DC voltage range, 12.5V   
+   
+
+
+Program m76_meas
+----------------
+
+Usage:
+   m76_meas [<opts>] <device> [<opts>]
+
+Function:
+   Configure M76 and perform measurement
+
+Options:
+   device       device name....................... [none]       
+   -n           do not show usage at start..........[no]         
+   -r=<range>   set range ........................ [2]          
+                values and meaning of range see m76_drv.h       
+   -s=<ms>      settling time after channel change [800]        
+   -i           use interrupt waiting for data ... [no]         
+   -l           loop mode......................... [no]         
+   -d=<ms>      delay time for measuring loop .... [1000]       
+
+   Test Options:                                             
+   =============                                             
+   -t=<number>  maximal test measuring cycles .... [0]       
+         option -t performs a test that does the following:  
+         - average of <number> measured values (maximal 100000)
+           if key is pressed before <number> measurements 
+           have been performed, average is built from measured
+           values until key is pressed.                      
+         - shows min Value.                                  
+         - shows max Value.                                  
+         - errors occuring after path to device is opened    
+           must confirmed.                                   
+   these options are active only when option -t is given:               
+   -a=<val>    upper valid limit for max Value......... [0.0]
+   -b=<val>    lower valid limit for min Value......... [0.0]
+               with:   min Value >= lower limit              
+                       max Value <= upper limit              
+       
+Description:
+   Configure M76 and perform measurment   
+   

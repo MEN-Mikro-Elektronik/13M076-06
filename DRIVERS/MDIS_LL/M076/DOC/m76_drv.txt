@@ -1,0 +1,460 @@
+Function Description
+====================
+Tue Aug 27 11:56:02  2002
+ 
+Overview of all Functions
+-------------------------
+
+M76_GetEntry           - Initialize driver's branch table 
+M76_Init               - Allocate and return low-level handle, initialize hardware 
+M76_Exit               - De-initialize hardware and clean up memory 
+M76_Read               - Read a value from the device, to be used for DC/AC current 
+M76_Write              - Function not supported on M76 
+M76_SetStat            - Set the driver status 
+M76_GetStat            - Get the driver status 
+M76_BlockRead          - Read a data block from the device, to be used for resistance 
+M76_BlockWrite         - Function not supported on M76. 
+M76_Irq                - Interrupt service routine. 
+M76_Info               - Get information about hardware and driver requirements. 
+ 
+
+Function M76_GetEntry()
+-----------------------
+
+Syntax:
+    #ifdef _ONE_NAMESPACE_PER_DRIVER_
+        extern void LL_GetEntry( LL_ENTRY* drvP )
+    #else
+        extern void __M76_GetEntry( LL_ENTRY* drvP )
+    #endif
+
+Description:
+    Initialize driver's branch table
+
+Input:
+    ---
+
+Output:
+    drvP  pointer to the initialized branch table structure
+
+
+Function M76_Init()
+-------------------
+
+Syntax:
+    static int32 M76_Init(
+        DESC_SPEC       *descP,
+        OSS_HANDLE      *osHdl,
+        MACCESS         *ma,
+        OSS_SEM_HANDLE  *devSemHdl,
+        OSS_IRQ_HANDLE  *irqHdl,
+        LL_HANDLE       **llHdlP
+    )
+
+Description:
+    Allocate and return low-level handle, initialize hardware
+
+    The function makes following settings:
+    - range: M76_RANGE_AC_V3
+    - filter: 1920 (10Hz)
+    - settling time: 700 ms
+
+    The following descriptor keys are used:
+
+    Descriptor key        Default          Range
+    --------------------  ---------------  -------------
+    DEBUG_LEVEL_DESC      OSS_DBG_DEFAULT  see dbg.h
+    DEBUG_LEVEL           OSS_DBG_DEFAULT  see dbg.h
+    ID_CHECK              1                0..1
+
+Input:
+    descSpec   pointer to descriptor data
+    osHdl      oss handle
+    ma         hardware access handle
+    devSemHdl  device semaphore handle
+    irqHdl     irq handle
+
+Output:
+    llHdlP     pointer to low-level driver handle
+    return     success (0) or error code
+
+
+Function M76_Exit()
+-------------------
+
+Syntax:
+    static int32 M76_Exit(
+       LL_HANDLE    **llHdlP
+    )
+
+Description:
+    De-initialize hardware and clean up memory
+
+Input:
+    llHdlP    pointer to low-level driver handle
+
+Output:
+    return    success (0) or error code
+
+
+Function M76_Read()
+-------------------
+
+Syntax:
+    static int32 M76_Read(
+        LL_HANDLE *llHdl,
+        int32 ch,
+        int32 *valueP
+    )
+
+Description:
+    Read a value from the device, to be used for DC/AC current
+    and voltage measurements.
+
+    Reads a 24-bit value from the A/D converter. The bits are
+    right-aligned in a 32-bit long word. The upper 8 bits are
+    always zero.
+
+    If the checksum test result is FALSE, an error is returned 
+    as long as read is not explicitly allowed.
+    If there are no valid calibration values for the selected 
+    range an error is returned.
+
+Input:
+    llHdl    low-level handle
+    ch       current channel
+
+Output:
+    valueP   read value
+    return   success (0) or error code
+
+
+Function M76_Write()
+--------------------
+
+Syntax:
+    static int32 M76_Write(
+        LL_HANDLE *llHdl,
+        int32 ch,
+        int32 value
+    )
+
+Description:
+    Function not supported on M76
+
+Input:
+    llHdl    low-level handle
+    ch       current channel
+    value    value to write 
+
+Output:
+    return   success (0) or error code
+
+
+Function M76_SetStat()
+----------------------
+
+Syntax:
+    static int32 M76_SetStat(
+        LL_HANDLE *llHdl,
+        int32  code,
+        int32  ch,
+        INT32_OR_64 value32_or_64
+    )
+
+Description:
+    Set the driver status
+
+    The following status codes are supported:
+
+    Code                 Description                 Values
+    -------------------  --------------------------  ----------
+    M_LL_DEBUG_LEVEL     driver debug level          see dbg.h
+    M_MK_IRQ_ENABLE      interrupt enable            0..1
+    M_LL_IRQ_COUNT       interrupt counter           0..max
+    M_LL_CH_DIR          direction of curr. chan.    M_CH_IN
+    M76_RANGE            select measurement range    M76_RANGE_xxx
+    M76_SETTLE           settling time               0..max ms
+    M76_PERMIT           permit measurement if       0..1
+                         checksum is wrong    
+    M76_STORE_CALI    *) store calibration memory    UEE_MAGIC 
+                         in user EEPROM
+    M76_BLK_CALI      *) write a value to            see below
+                         calibration memory
+    M76_DELMAGIC      *) delete magic word in        UEE_MAGIC
+                         user EEPROM
+
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
+    !*) Note:  MEN carries out an initial calibration. The    !
+    !          values of this procedure are stored in the     !
+    !          user EEPROM at delivery of the M76 M-Module.   !
+    !                                                         !  
+    !!   DO NOT ALTER THE STORED CALIBRATION VALUES OR USE   !!
+    !!   CODES CONCERNING THE CALIBRATION WITHOUT THOROUGH   !!
+    !!   KNOWLEDGE OF THE CALIBRATION PROCEDURE.             !!
+    !                                                         ! 
+    ! M76_STORE_CALI stores all calibration values from       !
+    !           calibration memory to user EEPROM.            !
+    !                                                         !
+    ! M76_DELMAGIC overwrite the magic word in user EEPROM    !
+    !           with 0xffff. This means that next time        !
+    !           M76_Init routine runs all calibration values  !
+    !           in user EEPROM will be set to 0xffff          !
+    !                                                         !
+    ! M76_BLK_CALI writes a calibration value for the current !
+    !           range to calibration memory and writes ADC    !
+    !           Calibration Registers for the current range.  !
+    !           Description of data block:                    !
+    !            data[0]  kind of value                       !
+    !               0 = zero-scale AC/DC voltage/current      !
+    !               1 = full-scale AC/DC voltage/current      !
+    !               2 = Ux zero-scale resistance              !
+    !               3 = Im full-scale resistance              !
+    !               4 = Im zero-scale resistance              !
+    !               5 = Ux full-scale resistance              !
+    !            data[1]  calibration value                   !
+    !                                                         !
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!        
+
+    M76_RANGE selects the measuring range
+    for defines of M76_RANGE_xxx see m76_drv.h and hardware manual
+
+    M76_SETTLE defines the time the driver waits after range/
+    ADC channel was changed.
+
+Input:
+    llHdl				low-level handle
+    code				status code
+    ch					current channel
+    value32_or_64       data or
+               pointer to block data structure (M_SG_BLOCK)  (*)
+    (*) = for block status codes
+
+Output:
+    return     success (0) or error code
+
+
+Function M76_GetStat()
+----------------------
+
+Syntax:
+    static int32 M76_GetStat(
+        LL_HANDLE		*llHdl,
+        int32			code,
+        int32			ch,
+        INT32_OR_64		*value32_or_64P
+    )
+
+Description:
+    Get the driver status
+
+    The following status codes are supported:
+
+    Code                 Description                 Values
+    -------------------  --------------------------  ----------
+    M_LL_DEBUG_LEVEL     driver debug level          see dbg.h
+    M_LL_CH_NUMBER       number of channels          1
+    M_LL_CH_DIR          direction of curr. chan.    M_CH_IN
+    M_LL_CH_LEN          length of curr. ch. [bits]  32
+    M_LL_CH_TYP          description of curr. chan.  M_CH_ANALOG
+    M_LL_IRQ_COUNT       interrupt counter           0..max
+    M_LL_ID_CHECK        EEPROM is checked           0..1
+    M_LL_ID_SIZE         EEPROM size [bytes]         128
+    M_LL_BLK_ID_DATA     EEPROM raw data             -
+    M_MK_BLK_REV_ID      ident function table ptr    -
+
+    M76_RANGE            selected measurement range  M76_RANGE_xxx
+    M76_CHECKSUM         checksum of calib. values   0..1
+    M76_SETTLE           settling time               0..max ms
+    M76_PERMIT           measurement allowed with    0..1
+                         wrong checksum
+    M76_CINFO            calibration info of current 0..1
+                         range
+    M76_CALI          *) calibrates current range    see below
+
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
+    !*) Note:  MEN carries out an initial calibration. The    !
+    !          values of this procedure are stored in the     !
+    !          user EEPROM at delivery of the M76 M-Module.   !
+    !                                                         !  
+    !!   DO NOT ALTER THE STORED CALIBRATION VALUES OR USE   !!
+    !!   CODES CONCERNING THE CALIBRATION WITHOUT THOROUGH   !!
+    !!   KNOWLEDGE OF THE CALIBRATION PROCEDURE.             !!
+    !                                                         ! 
+    ! M76_CALI  performs a calibration for the selected range ! 
+    !           calling value:                                !
+    !            0 = zero-scale AC/DC voltage/current         !
+    !            1 = full-scale AC/DC voltage/current         !
+    !            2 = Ux zero-scale resistance                 !
+    !            3 = Im full-scale resistance                 !
+    !            4 = Im zero-scale resistance                 !
+    !            5 = Ux full-scale resistance                 !
+    !           modified value:                               !
+    !            detected calibration value                   !
+    !                                                         !
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!        
+
+    M76_CHECKSUM compares calibration values with a checksum
+        At driver start the calibration values are read from
+        the user EEPROM to memory. These values are XORed
+        and compared with a checksum also stored in the user
+        EEPROM.
+         1 .. comparison ok
+         0 .. comparison error
+
+    M76_CINFO if a word in user EEPROM is 0xffff for the 
+         selected range, M76_CINFO returns 0, else 1
+
+Input:
+    llHdl				low-level handle
+    code				status code
+    ch					current channel
+    value32_or_64P      pointer to block data structure (M_SG_BLOCK)  (*) 
+    (*) = for block status codes
+
+Output:
+    value32_or_64P      data pointer or
+               pointer to block data structure (M_SG_BLOCK)  (*) 
+    return     success (0) or error code
+    (*) = for block status codes
+
+
+Function M76_BlockRead()
+------------------------
+
+Syntax:
+    static int32 M76_BlockRead(
+         LL_HANDLE *llHdl,
+         int32     ch,
+         void      *buf,
+         int32     size,
+         int32     *nbrRdBytesP
+    )
+
+Description:
+    Read a data block from the device, to be used for resistance
+    measurements.
+    First value is Ux, second value is Im.
+    For measuring principle see hardware manual.
+    Valid data is a 24-bit value. The bits are right-aligned in
+    a 32-bit long word. The upper 8 bits are always zero.
+
+      +------+
+      |  Ux  |    1st value
+      +------+
+      |  Im  |    2nd value
+      +------+
+
+    If the checksum test result is FALSE, an error is returned 
+    as long as read is not explicitly allowed.
+    If there are no valid calibration values for the selected 
+    range an error is returned.
+
+Input:
+    llHdl        low-level handle
+    ch           current channel
+    buf          data buffer
+    size         data buffer size
+
+Output:
+    nbrRdBytesP  number of read bytes
+    return       success (0) or error code
+
+
+Function M76_BlockWrite()
+-------------------------
+
+Syntax:
+    static int32 M76_BlockWrite(
+         LL_HANDLE *llHdl,
+         int32     ch,
+         void      *buf,
+         int32     size,
+         int32     *nbrWrBytesP
+    )
+
+Description:
+    Function not supported on M76.
+
+Input:
+    llHdl        low-level handle
+    ch           current channel
+    buf          data buffer
+    size         data buffer size
+
+Output:
+    nbrWrBytesP  number of written bytes
+    return       success (0) or error code
+
+
+Function M76_Irq()
+------------------
+
+Syntax:
+    static int32 M76_Irq(
+       LL_HANDLE *llHdl
+    )
+
+Description:
+    Interrupt service routine.
+
+    The interrupt is triggered after read transfer was completed.
+
+    If the driver can detect the interrupt's cause it returns
+    LL_IRQ_DEVICE or LL_IRQ_DEV_NOT, otherwise LL_IRQ_UNKNOWN.
+
+Input:
+    llHdl    low-level handle
+
+Output:
+    return   LL_IRQ_DEVICE    irq caused by device
+             LL_IRQ_DEV_NOT   irq not caused by device
+
+
+Function M76_Info()
+-------------------
+
+Syntax:
+    static int32 M76_Info(
+       int32  infoType,
+       ...
+    )
+
+Description:
+    Get information about hardware and driver requirements.
+
+    The following info codes are supported:
+
+    Code                      Description
+    ------------------------  -----------------------------
+    LL_INFO_HW_CHARACTER      hardware characteristics
+    LL_INFO_ADDRSPACE_COUNT   nr of required address spaces
+    LL_INFO_ADDRSPACE         address space information
+    LL_INFO_IRQ               interrupt required
+    LL_INFO_LOCKMODE          process lock mode required
+
+    The LL_INFO_HW_CHARACTER code returns all address and 
+    data modes (ORed) which are supported by the hardware
+    (MDIS_MAxx, MDIS_MDxx).
+
+    The LL_INFO_ADDRSPACE_COUNT code returns the number
+    of address spaces used by the driver.
+
+    The LL_INFO_ADDRSPACE code returns information about one
+    specific address space (MDIS_MAxx, MDIS_MDxx). The returned 
+    data mode represents the widest hardware access used by 
+    the driver.
+
+    The LL_INFO_IRQ code returns whether the driver supports an
+    interrupt routine (TRUE or FALSE).
+
+    The LL_INFO_LOCKMODE code returns which process locking
+    mode the driver needs (LL_LOCK_xxx).
+
+Input:
+    infoType     info code
+    ...          argument(s)
+
+Output:
+    return       success (0) or error code
+
