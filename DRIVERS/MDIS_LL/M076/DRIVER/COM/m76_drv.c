@@ -464,7 +464,7 @@ static int32 M76_Init(
     /* if there is no magic word in user EEPROM then set all cells used for */
     /* calibration values to 0xffff */
     MWRITE_D16(llHdl->ma, CTRL_REG, UEPROM_SEL);    /* select user EEPROM */
-    if ( __M76_UeeRead(llHdl->osHdl, (u_int32)llHdl->ma,
+    if ( __M76_UeeRead(llHdl->osHdl, llHdl->ma,
              (u_int8)UEE_MAGIC_ADDRESS) != UEE_MAGIC )  
     {
         u_int16 idx;
@@ -2190,11 +2190,11 @@ static int32 ReadCaliProm(LL_HANDLE *llHdl) /* nodoc */
     
     for (idx=0; idx < (sizeof(llHdl->caliVals)/2); idx+=2 )  {
         val16 = (u_int16) __M76_UeeRead(llHdl->osHdl,
-                                      (u_int32)llHdl->ma, (u_int8)idx);
+                                      llHdl->ma, (u_int8)idx);
         checkSum ^= val16;
         *vals = val16;
         val16 = (u_int16) __M76_UeeRead(llHdl->osHdl, 
-                                      (u_int32)llHdl->ma, (u_int8)idx+1);
+                                      llHdl->ma, (u_int8)idx+1);
         checkSum ^= val16;
         *vals = *vals | ((u_int32)val16 << 16 );
 
@@ -2202,7 +2202,7 @@ static int32 ReadCaliProm(LL_HANDLE *llHdl) /* nodoc */
         vals++;
     }
     help = (u_int16) __M76_UeeRead(llHdl->osHdl, 
-           (u_int32)llHdl->ma, (u_int8)idx);
+           llHdl->ma, (u_int8)idx);
 
     DBGWRT_3((DBH, "  uee Checksum: %x,  calculated checksum: %x\n",help, checkSum));
 
@@ -2288,7 +2288,7 @@ static int32 UeeWrite(LL_HANDLE *llHdl, u_int8 index, u_int16 value)/* nodoc */
     do {    
         error = 0;
         cycle--;
-        error = __M76_UeeWrite(llHdl->osHdl, (u_int8 *)llHdl->ma,
+        error = __M76_UeeWrite(llHdl->osHdl, llHdl->ma,
                             index, value);
         if (error == 2)  /* verify error */
             break;

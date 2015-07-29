@@ -47,8 +47,8 @@
 
 
 /* calibration eeprom access prototypes */
-extern int32 __M76_UeeRead(OSS_HANDLE *osh, u_int32 base, u_int8 index );
-extern int32 __M76_UeeWrite(OSS_HANDLE *osh, u_int8 *addr, u_int8  index, u_int16 data );
+extern int32 __M76_UeeRead(OSS_HANDLE *osh, MACCESS ma, u_int8 index );
+extern int32 __M76_UeeWrite(OSS_HANDLE *osh, MACCESS ma, u_int8 index, u_int16 data );
 
 #ifdef __cplusplus
       }

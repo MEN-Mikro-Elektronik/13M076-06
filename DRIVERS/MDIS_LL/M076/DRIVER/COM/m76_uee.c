@@ -61,54 +61,55 @@
 #define     MODREG  0xfe
 
 /*--- K&R prototypes ---*/
-static int32 _write( OSS_HANDLE *osh, u_int32 base, u_int8 index, u_int16 data );
-static int32 _erase( OSS_HANDLE *osh, u_int32 base, u_int8 index );
-static void _opcode( OSS_HANDLE *osh, u_int32 base, u_int16 code );
-static void _select( OSS_HANDLE *osh, u_int32 base );
-static void _deselect( u_int32 base );
-static int16 _clock( OSS_HANDLE *osh, u_int32 base, u_int8 dbs );
+static int32 _write( OSS_HANDLE *osh, MACCESS ma, u_int8 index, u_int16 data );
+static int32 _erase( OSS_HANDLE *osh, MACCESS ma, u_int8 index );
+static void _opcode( OSS_HANDLE *osh, MACCESS ma, u_int16 code );
+static void _select( OSS_HANDLE *osh, MACCESS ma );
+static void _deselect( MACCESS ma );
+static int16 _clock( OSS_HANDLE *osh, MACCESS ma, u_int8 dbs );
 static void _delay( OSS_HANDLE *osh );
 
 /******************************* M76_UeeWrite *******************************
  *
- *  Description:  Write a specified word into EEPROM at 'base'.
+ *  Description:  Write a specified word into EEPROM at 'ma'.
  *
  *---------------------------------------------------------------------------
  *  Input......:  osh      OSS_HANDLE
- *                addr     base address pointer
+ *                ma       hardware access handle
  *                index    index to write (0..15)
  *                data     word to write
  *  Output.....:  return   0..ok | error
  *  Globals....:  ---
  ***************************************************************************/
 extern int32 __M76_UeeWrite                 /* nodoc */
-(OSS_HANDLE *osh, u_int8 *addr, u_int8  index, u_int16 data )
+(OSS_HANDLE *osh, MACCESS ma, u_int8  index, u_int16 data )
 {
-    if( _erase(osh, (u_int32)addr, index ))              /* erase cell first */
+    if( _erase(osh, ma, index ))              /* erase cell first */
         return 3;
 
-    return _write(osh, (u_int32)addr, index, data );
+    return _write(osh, ma, index, data );
 }
 
 /******************************* M76_UeeRead ********************************
  *
- *  Description:  Read a specified word from EEPROM at 'base'.
+ *  Description:  Read a specified word from EEPROM at 'ma'.
  *
  *---------------------------------------------------------------------------
- *  Input......:  addr     base address pointer
+ *  Input......:  osh      oss handle
+ *                ma       hardware access handle
  *                index    index to read (0..15)
  *  Output.....:  return   readed word
  *  Globals....:  ---
  ****************************************************************************/
-extern int32 __M76_UeeRead(OSS_HANDLE *osh, u_int32 base, u_int8 index ) /* nodoc */
+extern int32 __M76_UeeRead(OSS_HANDLE *osh, MACCESS ma, u_int8 index ) /* nodoc */
 {
     register u_int16    wx;                 /* data word    */
     register int32       i;                 /* counter      */
 
-    _opcode(osh, base, (_READ_+index) );
+    _opcode(osh, ma, (_READ_+index) );
     for(wx=0, i=0; i<16; i++)
-        wx = (wx<<1)+_clock(osh,base,0);
-    _deselect(base);
+        wx = (wx<<1)+_clock(osh,ma,0);
+    _deselect(ma);
 
     return(wx);
 }
@@ -116,46 +117,48 @@ extern int32 __M76_UeeRead(OSS_HANDLE *osh, u_int32 base, u_int8 index ) /* nodo
 
 /******************************* _write ************************************
  *
- *  Description:  Write a specified word into EEPROM at 'base'.
+ *  Description:  Write a specified word into EEPROM at 'ma'.
  *
  *---------------------------------------------------------------------------
- *  Input......:  index    index to write (0..255)
+ *  Input......:  osh      oss handle
+ *                ma       hardware access handle
+ *                index    index to write (0..255)
  *                data     word to write
  *  Output.....:  return   0=ok 1=write err 2=verify err
  *  Globals....:  ---
  ***************************************************************************/
 static int32 _write                                         /* nodoc */
-(OSS_HANDLE *osh, u_int32 base, u_int8 index, u_int16 data ) 
+(OSS_HANDLE *osh, MACCESS ma, u_int8 index, u_int16 data ) 
 {
     register int    i,j;                    /* counters     */
 
-    _opcode(osh,base,EWEN);                     /* write enable */
-    _deselect(base);                        /* deselect     */
+    _opcode(osh,ma,EWEN);                     /* write enable */
+    _deselect(ma);                        /* deselect     */
 
-    _opcode(osh,base, (_WRITE_+index) );             /* select write */
+    _opcode(osh,ma, (_WRITE_+index) );             /* select write */
     for(i=15; i>=0; i--)
-        _clock(osh,base,(u_int8)((data>>i)&0x01));        /* write data   */
-    _deselect(base);                        /* deselect     */
+        _clock(osh,ma,(u_int8)((data>>i)&0x01));        /* write data   */
+    _deselect(ma);                        /* deselect     */
 
-    _select(osh,base);
+    _select(osh,ma);
     for(i=T_WP; i>0; i--)                   /* wait for low */
-    {   if(!_clock(osh,base,0))
+    {   if(!_clock(osh,ma,0))
             break;
         _delay(osh);
     }
     for(j=T_WP; j>0; j--)                   /* wait for high*/
-    {   if(_clock(osh,base,0))
+    {   if(_clock(osh,ma,0))
             break;
         _delay(osh);
     }
 
-    _opcode(osh,base, EWDS);                /* write disable*/
-    _deselect(base);                        /* disable      */
+    _opcode(osh,ma, EWDS);                /* write disable*/
+    _deselect(ma);                        /* disable      */
 
     if((i==0) || (j==0))                    /* error ?      */
         return 1;                           /* ..yes */
 
-    if( data != __M76_UeeRead(osh, base,index) ) /* verify data  */
+    if( data != __M76_UeeRead(osh, ma,index) ) /* verify data  */
         return 2;                           /* ..error      */
 
     return 0;                               /* ..no         */
@@ -167,35 +170,37 @@ static int32 _write                                         /* nodoc */
  *  Description:  Erase a specified word into EEPROM
  *
  *---------------------------------------------------------------------------
- *  Input......:  index    index to write (0..15)
+ *  Input......:  osh      oss handle
+ *                ma       hardware access handle
+ *                index    index to write (0..15)
  *  Output.....:  return   0=ok 1=error
  *  Globals....:  ---
  ***************************************************************************/
-static int32 _erase( OSS_HANDLE *osh, u_int32 base, u_int8 index )  /* nodoc */
+static int32 _erase( OSS_HANDLE *osh, MACCESS ma, u_int8 index )  /* nodoc */
 {
     register int    i,j;                    /* counters     */
 
-    _opcode(osh, base,EWEN);                /* erase enable */
-    _deselect(base);                        /* deselect     */
+    _opcode(osh, ma,EWEN);                /* erase enable */
+    _deselect(ma);                        /* deselect     */
 
-    _opcode(osh,base,(ERASE+index) );        /* select erase */
-    _deselect(base);                        /* deselect     */
+    _opcode(osh,ma,(ERASE+index) );        /* select erase */
+    _deselect(ma);                        /* deselect     */
 
-    _select(osh,base);
+    _select(osh,ma);
     for(i=T_WP; i>0; i--)                   /* wait for low */
-    {   if(!_clock(osh,base,0))
+    {   if(!_clock(osh,ma,0))
             break;
         _delay(osh);
     }
 
     for(j=T_WP; j>0; j--)                   /* wait for high*/
-    {   if(_clock(osh,base,0))
+    {   if(_clock(osh,ma,0))
             break;
         _delay(osh);
     }
 
-    _opcode(osh,base,EWDS);                     /* erase disable*/
-    _deselect(base);                        /* disable      */
+    _opcode(osh,ma,EWDS);                     /* erase disable*/
+    _deselect(ma);                        /* disable      */
 
     if((i==0) || (j==0))                    /* error ?      */
         return 1;
@@ -209,19 +214,21 @@ static int32 _erase( OSS_HANDLE *osh, u_int32 base, u_int8 index )  /* nodoc */
  *  Description:  Output opcode with leading startbit
  *
  *---------------------------------------------------------------------------
- *  Input......:  code     opcode to write
+ *  Input......:  osh      oss handle
+ *                ma       hardware access handle
+ *                code     opcode to write
  *  Output.....:  -
  *  Globals....:  ---
  ***************************************************************************/
-static void _opcode(OSS_HANDLE *osh, u_int32 base, u_int16 code ) /* nodoc */
+static void _opcode(OSS_HANDLE *osh, MACCESS ma, u_int16 code ) /* nodoc */
 {
     register int i;
 
-    _select(osh,base);
-    _clock(osh,base,1);                         /* output start bit */
+    _select(osh,ma);
+    _clock(osh,ma,1);                         /* output start bit */
 
     for(i=OPLEN-1; i>=0; i--)
-        _clock(osh,base,(u_int8)((code>>i)&0x01) );/* output instruction code  */
+        _clock(osh,ma,(u_int8)((code>>i)&0x01) );/* output instruction code  */
 }
 
 
@@ -238,15 +245,16 @@ static void _opcode(OSS_HANDLE *osh, u_int32 base, u_int16 code ) /* nodoc */
  *                 output CS high
  *                 delay
  *---------------------------------------------------------------------------
- *  Input......:  -
+ *  Input......:  osh      oss handle
+ *                ma       hardware access handle
  *  Output.....:  -
  *  Globals....:  ---
  ***************************************************************************/
-static void _select(OSS_HANDLE *osh, u_int32 base ) /* nodoc */
+static void _select( OSS_HANDLE *osh, MACCESS ma ) /* nodoc */
 {
-    MWRITE_D16( base, MODREG, 0 );          /* everything inactive */
+    MWRITE_D16( ma, MODREG, 0 );          /* everything inactive */
     _delay(osh);
-    MWRITE_D16( base, MODREG, B_SEL );      /* select high */
+    MWRITE_D16( ma, MODREG, B_SEL );      /* select high */
     _delay(osh);
 }
 
@@ -255,13 +263,13 @@ static void _select(OSS_HANDLE *osh, u_int32 base ) /* nodoc */
  *  Description:  Deselect EEPROM
  *                 output CS low
  *---------------------------------------------------------------------------
- *  Input......:  -
+ *  Input......:  ma       hardware access handle
  *  Output.....:  -
  *  Globals....:  ---
  ***************************************************************************/
-static void _deselect( u_int32 base ) /* nodoc */
+static void _deselect( MACCESS ma ) /* nodoc */
 {
-    MWRITE_D16( base, MODREG, 0 );          /* everything inactive */
+    MWRITE_D16( ma, MODREG, 0 );          /* everything inactive */
 }
 
 
@@ -276,20 +284,22 @@ static void _deselect( u_int32 base ) /* nodoc */
  *                 return state of data serial eeprom's DO - line
  *                 (Note: keep CS asserted)
  *---------------------------------------------------------------------------
- *  Input......:  data bit to send
+ *  Input......:  osh      oss handle
+ *                ma       hardware access handle
+ *                dbs      data bit to send
  *  Output.....:  state of DO line
  *  Globals....:  ---
  ***************************************************************************/
-static int16 _clock(OSS_HANDLE *osh, u_int32 base, u_int8 dbs ) /* nodoc */
+static int16 _clock( OSS_HANDLE *osh, MACCESS ma, u_int8 dbs ) /* nodoc */
 {
-    MWRITE_D16( base, MODREG, dbs|B_SEL );  /* output clock low */
+    MWRITE_D16( ma, MODREG, dbs|B_SEL );  /* output clock low */
                                             /* output data high/low */
     _delay(osh);                               /* delay    */
 
-    MWRITE_D16( base, MODREG, dbs|B_CLK|B_SEL );  /* output clock high */
+    MWRITE_D16( ma, MODREG, dbs|B_CLK|B_SEL );  /* output clock high */
     _delay(osh);                               /* delay    */
 
-    return( MREAD_D16( base, MODREG) & B_DAT );  /* get data */
+    return( MREAD_D16( ma, MODREG) & B_DAT );  /* get data */
 }
 
 /******************************* _delay ******************************
