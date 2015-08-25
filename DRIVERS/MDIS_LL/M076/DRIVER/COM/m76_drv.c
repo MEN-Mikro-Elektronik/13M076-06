@@ -985,6 +985,19 @@ static int32 M76_SetStat(
                 llHdl->settleTime = value;
             }
             break;
+        /*--------------------------+
+        |  filter frequency         |
+        +--------------------------*/
+        case M76_FILTER:
+            if ((value < 20) || (value > 1920))  {
+                error = ERR_LL_ILL_PARAM;
+            }
+            else  {
+                llHdl->filFilter = value;
+                WriteFilterReg(llHdl);
+                OSS_Delay(llHdl->osHdl, llHdl->settleTime);
+            }
+            break;
         /*------------------------------+
         |   write to calibration memory |
         +------------------------------*/
@@ -1219,6 +1232,12 @@ static int32 M76_GetStat(
         +--------------------------*/
         case M76_SETTLE:
             *valueP = llHdl->settleTime;
+            break;
+       /*--------------------------+
+        |  filter frequency         |
+        +--------------------------*/
+        case M76_FILTER:
+            *valueP = llHdl->filFilter;
             break;
         /*--------------------------+
         |  permit                   |
