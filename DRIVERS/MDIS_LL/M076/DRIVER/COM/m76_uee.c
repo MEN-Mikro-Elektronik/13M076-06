@@ -30,7 +30,7 @@
  * Initial Revision
  *
  *---------------------------------------------------------------------------
- * (c) Copyright 2001 by MEN Mikro Elektronik GmbH, Nuernberg, Germany 
+ * (c) Copyright 2015 by MEN Mikro Elektronik GmbH, Nuernberg, Germany 
  ****************************************************************************/
 
 #include <MEN/men_typs.h>           

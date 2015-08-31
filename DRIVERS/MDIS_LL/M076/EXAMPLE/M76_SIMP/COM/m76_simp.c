@@ -38,7 +38,7 @@
  * Initial Revision
  *
  *---------------------------------------------------------------------------
- * (c) Copyright 2010 by MEN Mikro Elektronik GmbH, Nuremberg, Germany 
+ * (c) Copyright 2015 by MEN Mikro Elektronik GmbH, Nuremberg, Germany 
  ****************************************************************************/
  
 static const char RCSid[]="$Id: m76_simp.c,v 1.6 2010/03/11 17:04:08 amorbach Exp $";

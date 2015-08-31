@@ -16,6 +16,8 @@
  * Revision 1.2  2004/04/02 16:39:56  ub
  * cosmetics
  *
+ * in between: blue screen bugfix by dp
+ *
  * Revision 1.1  2001/06/05 16:24:03  Schoberl
  * Initial Revision
  *

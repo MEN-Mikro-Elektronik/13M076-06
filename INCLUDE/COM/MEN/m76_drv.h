@@ -55,17 +55,15 @@ typedef struct {
 |  DEFINES                                 |
 +-----------------------------------------*/
 /* M76 specific status codes (STD) */			/* S,G: S=setstat, G=getstat */
-/*#define M76_XXX           M_DEV_OF+0x00	*/	/* G,S: xxx */
-#define M76_RANGE           M_DEV_OF+0x00		/* G,S: measurement range */
-#define M76_CALI			M_DEV_OF+0x01		/* G  :	perform a calibration */
-#define M76_STORE_CALI		M_DEV_OF+0x02		/*   S:	save calibration values */
-#define M76_CHECKSUM		M_DEV_OF+0x04		/* G  : cali vals checksum ok? */
-#define M76_SETTLE			M_DEV_OF+0x05		/* G,S:	settling time */	
-#define M76_PERMIT			M_DEV_OF+0x06		/* G,S: permit measurment with */
-												/*      wrong checksum */
-#define M76_CINFO			M_DEV_OF+0x07		/* G  : calibration info of range */
-#define M76_DELMAGIC		M_DEV_OF+0x10		/*   S: delete magic word in uee */
-#define M76_FILTER          M_DEV_OF+0x11		/* G,S: filter Value */
+#define M76_RANGE       M_DEV_OF+0x00		/* G,S: measurement range */
+#define M76_CALI	M_DEV_OF+0x01		/* G  :	perform a calibration */
+#define M76_STORE_CALI	M_DEV_OF+0x02		/*   S:	save calibration values */
+#define M76_CHECKSUM	M_DEV_OF+0x04		/* G  : cali vals checksum ok? */
+#define M76_SETTLE	M_DEV_OF+0x05		/* G,S:	settling time */	
+#define M76_PERMIT	M_DEV_OF+0x06		/* G,S: permit measurment with wrong checksum */
+#define M76_CINFO	M_DEV_OF+0x07		/* G  : calibration info of range */
+#define M76_DELMAGIC	M_DEV_OF+0x10		/*   S: delete magic word in uee */
+#define M76_FILTER      M_DEV_OF+0x11		/* G,S: filter Value */
 /* M76 specific status codes (BLK)	*/			/* S,G: S=setstat, G=getstat */
 #define M76_BLK_CALI		M_DEV_BLK_OF+0x00 	/* S  : write a value to caliVals */
 

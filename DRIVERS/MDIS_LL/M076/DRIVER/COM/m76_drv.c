@@ -11,7 +11,7 @@
  *
  *               The M76 module is a digital system multimeter M-Module for
  *               measuring DC and AC voltages, DC and AC currents, and
- *               resistance by means of 2-wire and/or 4-wire connection.
+ *               resistance by means of 2-wire and/or 4-wire connect.
  *
  *     Required: OSS, DESC, DBG, ID libraries 
  *     Switches: _ONE_NAMESPACE_PER_DRIVER_
