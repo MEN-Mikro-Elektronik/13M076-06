@@ -994,7 +994,7 @@ static int32 M76_SetStat(
                 error = ERR_LL_ILL_PARAM;
             }
             else  {
-                llHdl->filFilter = value;
+                llHdl->filFilter = (u_int16)(value & 0xffff);
                 WriteFilterReg(llHdl);
                 OSS_Delay(llHdl->osHdl, llHdl->settleTime);
             }
