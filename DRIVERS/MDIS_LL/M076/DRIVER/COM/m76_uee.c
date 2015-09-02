@@ -7,8 +7,8 @@
  *        $Date: 2004/04/02 16:39:53 $
  *    $Revision: 1.3 $
  *
- *  Description: M76 user eeprom access (cloned/adapted from 
- *                                       c_drvadd.c/microwire_port.c)
+ *  Description: M76 user eeprom access 
+ *               (cloned/adapted from c_drvadd.c/microwire_port.c)
  *                      
  *                      
  *     Required:  
@@ -30,7 +30,7 @@
  * Initial Revision
  *
  *---------------------------------------------------------------------------
- * (c) Copyright 2015 by MEN Mikro Elektronik GmbH, Nuernberg, Germany 
+ * (c) Copyright 2015 by MEN Mikro Elektronik GmbH, Nuremberg, Germany 
  ****************************************************************************/
 
 #include <MEN/men_typs.h>           

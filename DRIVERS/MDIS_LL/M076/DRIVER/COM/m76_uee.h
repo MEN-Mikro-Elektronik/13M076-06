@@ -14,7 +14,7 @@
  *
  * $Log: m76_uee.h,v $
  * Revision 1.2  2004/04/02 16:39:56  ub
- * cosmetics
+ * cosmetics  
  *
  * in between: blue screen bugfix by dp
  *
