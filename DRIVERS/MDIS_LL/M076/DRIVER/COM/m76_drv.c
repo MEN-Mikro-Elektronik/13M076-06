@@ -29,7 +29,7 @@
  * cosmetics
  *
  * Revision 1.6  2002/08/27 11:47:30  LSchoberl
- * defines for configuration register settings for meas. ranges changed
+ * defines for configuration register settings for meas. ranges changed 
  *
  * Revision 1.5  2001/12/18 14:33:02  Schoberl
  * define for AC_V3 changed, M76_Irq returns LL_IRQ_DEVICE if irq was caused
